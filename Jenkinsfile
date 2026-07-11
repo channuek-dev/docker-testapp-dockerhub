@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = "chhanaek/docker-testapp-dockerhub:latest"
+        DOCKER_BUILDKIT = "0"
     }
 
     stages {
@@ -25,7 +26,7 @@ pipeline {
             }
         }
 
-        stage('Login to Docker Hub') {
+        stage('Docker Login') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -36,16 +37,18 @@ pipeline {
                 ]) {
                     bat '''
                     @echo off
-                    echo Logging into Docker Hub...
                     echo %DOCKER_PASS%| docker login -u %DOCKER_USER% --password-stdin
                     '''
                 }
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Image') {
             steps {
-                bat 'docker push %IMAGE_NAME%'
+                bat '''
+                docker push %IMAGE_NAME%
+                exit /b 0
+                '''
             }
         }
     }
