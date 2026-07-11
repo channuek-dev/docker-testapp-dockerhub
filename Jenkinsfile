@@ -1,6 +1,9 @@
 pipeline {
-
     agent any
+
+    environment {
+        IMAGE_NAME = "chhanaek/docker-testapp-dockerhub:latest"
+    }
 
     stages {
 
@@ -10,37 +13,40 @@ pipeline {
             }
         }
 
-        stage('Install') {
+        stage('Install Dependencies') {
             steps {
                 bat 'npm ci'
             }
         }
 
-        stage('Verify Syntax') {
-            steps {
-                bat 'node --check server.js'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t docker-testapp:latest .'
+                bat 'docker build -t %IMAGE_NAME% .'
             }
         }
 
-        stage('List Docker Images') {
+        stage('Login to Docker Hub') {
             steps {
-                bat 'docker images'
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                bat 'docker push %IMAGE_NAME%'
             }
         }
     }
 
     post {
-        success {
-            echo 'Build completed successfully.'
-        }
-        failure {
-            echo 'Build failed.'
+        always {
+            bat 'docker logout'
         }
     }
 }
