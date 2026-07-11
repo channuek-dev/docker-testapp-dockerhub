@@ -1,4 +1,5 @@
 pipeline {
+
     agent any
 
     stages {
@@ -9,13 +10,13 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install') {
             steps {
-                bat 'npm install'
+                bat 'npm ci'
             }
         }
 
-        stage('Verify Application') {
+        stage('Verify Syntax') {
             steps {
                 bat 'node --check server.js'
             }
@@ -36,11 +37,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Build completed successfully.'
         }
-
         failure {
-            echo 'Pipeline failed.'
+            echo 'Build failed.'
         }
     }
 }
